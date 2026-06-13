@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>オレンジのアナログ時計</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #ffb74d 0%, #ff9800 100%);
+            font-family: 'Arial', sans-serif;
+        }
+
+        .clock-container {
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border-radius: 50%;
+            background: white;
+            padding: 20px;
+        }
+
+        canvas {
+            display: block;
+            border-radius: 50%;
+        }
+
+        .time-display {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 18px;
+            color: #ff9100;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="clock-container">
+        <canvas id="clockCanvas" width="400" height="400"></canvas>
+        <div class="time-display" id="timeDisplay"></div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('clockCanvas');
+        const ctx = canvas.getContext('2d');
+        const radius = canvas.width / 2;
+        const centerX = radius;
+        const centerY = radius;
+
+        // オレンジ系のカラーパレット
+        const orangeColor = '#ff9100';
+        const darkOrangeColor = '#ff6d00';
+        const lightOrangeColor = '#ffb74d';
+        const veryLightOrangeColor = '#ffe0b2';
+
+        function drawClock() {
+            drawClockFace();
+            drawNumbers();
+            drawTime();
+        }
+
+        function drawClockFace() {
+            // 背景
+            ctx.fillStyle = veryLightOrangeColor;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius - 10, 0, 2 * Math.PI);
+            ctx.fill();
+
+            // 枠線
+            ctx.strokeStyle = darkOrangeColor;
+            ctx.lineWidth = 8;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius - 10, 0, 2 * Math.PI);
+            ctx.stroke();
+
+            // 中央の点
+            ctx.fillStyle = darkOrangeColor;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 10, 0, 2 * Math.PI);
+            ctx.fill();
+
+            // インデックスマーク
+            ctx.strokeStyle = orangeColor;
+            ctx.lineWidth = 3;
+            for (let i = 0; i < 60; i++) {
+                const angle = (i * 6 * Math.PI) / 180;
+                const isHour = i % 5 === 0;
+
+                const startRadius = isHour ? radius - 35 : radius - 25;
+                const endRadius = radius - 15;
+
+                const x1 = centerX + startRadius * Math.sin(angle);
+                const y1 = centerY - startRadius * Math.cos(angle);
+                const x2 = centerX + endRadius * Math.sin(angle);
+                const y2 = centerY - endRadius * Math.cos(angle);
+
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+            }
+        }
+
+        function drawNumbers() {
+            ctx.font = 'bold 24px Arial';
+            ctx.fillStyle = darkOrangeColor;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            for (let i = 1; i <= 12; i++) {
+                const angle = (i * 30 * Math.PI) / 180;
+                const x = centerX + (radius - 50) * Math.sin(angle);
+                const y = centerY - (radius - 50) * Math.cos(angle);
+                ctx.fillText(i.toString(), x, y);
+            }
+        }
+
+        function drawTime() {
+            const now = new Date();
+            const hours = now.getHours() % 12;
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+            const milliseconds = now.getMilliseconds();
+
+            // 秒単位の滑らかな動き
+            const totalSeconds = seconds + milliseconds / 1000;
+            const secondAngle = (totalSeconds * 6 * Math.PI) / 180;
+            const minuteAngle = ((minutes + totalSeconds / 60) * 6 * Math.PI) / 180;
+            const hourAngle = ((hours + minutes / 60) * 30 * Math.PI) / 180;
+
+            // 時針
+            drawHand(hourAngle, radius * 0.5, 8, darkOrangeColor);
+
+            // 分針
+            drawHand(minuteAngle, radius * 0.7, 6, orangeColor);
+
+            // 秒針
+            drawHand(secondAngle, radius * 0.8, 2, lightOrangeColor);
+
+            // デジタル表示も更新
+            const timeString = `${String(now.getHours()).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            document.getElementById('timeDisplay').textContent = timeString;
+        }
+
+        function drawHand(angle, length, width, color) {
+            ctx.strokeStyle = color;
+            ctx.lineWidth = width;
+            ctx.lineCap = 'round';
+
+            const x = centerX + length * Math.sin(angle);
+            const y = centerY - length * Math.cos(angle);
+
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+        }
+
+        function animate() {
+            // 背景をクリア
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawClock();
+            requestAnimationFrame(animate);
+        }
+
+        // 初期表示と定期更新
+        animate();
+    </script>
+</body>
+</html>

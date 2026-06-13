@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>アナログ時計コレクション</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+            font-family: 'Arial', sans-serif;
+            transition: background 0.3s ease;
+        }
+
+        body.yellow-bg {
+            background: linear-gradient(135deg, #ffd54f 0%, #ffb74d 100%);
+        }
+
+        .tab-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .tab-button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-button.brown {
+            background: linear-gradient(135deg, #8b6914 0%, #5c4a0a 100%);
+            color: white;
+        }
+
+        .tab-button.green {
+            background: linear-gradient(135deg, #00b050 0%, #00703a 100%);
+            color: white;
+        }
+
+        .tab-button.red {
+            background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
+            color: white;
+        }
+
+        .tab-button.orange {
+            background: linear-gradient(135deg, #ff9100 0%, #ff6d00 100%);
+            color: white;
+        }
+
+        .tab-button.yellow {
+            background: linear-gradient(135deg, #ffd600 0%, #ffb300 100%);
+            color: #333;
+        }
+
+        .tab-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .tab-button.active {
+            transform: scale(1.1);
+        }
+
+        .clock-container {
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border-radius: 50%;
+            background: white;
+            padding: 20px;
+        }
+
+        canvas {
+            display: block;
+            border-radius: 50%;
+        }
+
+        .time-display {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="tab-container">
+        <button class="tab-button brown active" data-color="brown">茶色</button>
+        <button class="tab-button green" data-color="green">緑</button>
+        <button class="tab-button red" data-color="red">赤</button>
+        <button class="tab-button orange" data-color="orange">オレンジ</button>
+        <button class="tab-button yellow" data-color="yellow">黄色</button>
+    </div>
+
+    <div class="clock-container">
+        <canvas id="clockCanvas" width="400" height="400"></canvas>
+        <div class="time-display" id="timeDisplay"></div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('clockCanvas');
+        const ctx = canvas.getContext('2d');
+        const radius = canvas.width / 2;
+        const centerX = radius;
+        const centerY = radius;
+
+        const colorSchemes = {
+            brown: {
+                main: '#8b6914',
+                dark: '#5c4a0a',
+                light: '#c9a961',
+                veryLight: '#e8d7b8',
+                textColor: '#8b6914'
+            },
+            green: {
+                main: '#00b050',
+                dark: '#00703a',
+                light: '#00ff41',
+                veryLight: '#b3ffb3',
+                textColor: '#00b050'
+            },
+            red: {
+                main: '#d32f2f',
+                dark: '#b71c1c',
+                light: '#ff5252',
+                veryLight: '#ffcccc',
+                textColor: '#d32f2f'
+            },
+            orange: {
+                main: '#ff9100',
+                dark: '#ff6d00',
+                light: '#ffb74d',
+                veryLight: '#ffe0b2',
+                textColor: '#ff9100'
+            },
+            yellow: {
+                main: '#ffd600',
+                dark: '#ffb300',
+                light: '#ffea00',
+                veryLight: '#fff59d',
+                textColor: '#ffd600'
+            }
+        };
+
+        let currentColor = 'brown';
+
+        function drawClock() {
+            const colors = colorSchemes[currentColor];
+            drawClockFace(colors);
+            drawNumbers(colors);
+            drawTime(colors);
+        }
+
+        function drawClockFace(colors) {
+            // 背景
+            ctx.fillStyle = colors.veryLight;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius - 10, 0, 2 * Math.PI);
+            ctx.fill();
+
+            // 枠線
+            ctx.strokeStyle = colors.dark;
+            ctx.lineWidth = 8;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius - 10, 0, 2 * Math.PI);
+            ctx.stroke();
+
+            // 中央の点
+            ctx.fillStyle = colors.dark;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 10, 0, 2 * Math.PI);
+            ctx.fill();
+
+            // インデックスマーク
+            ctx.strokeStyle = colors.main;
+            ctx.lineWidth = 3;
+            for (let i = 0; i < 60; i++) {
+                const angle = (i * 6 * Math.PI) / 180;
+                const isHour = i % 5 === 0;
+
+                const startRadius = isHour ? radius - 35 : radius - 25;
+                const endRadius = radius - 15;
+
+                const x1 = centerX + startRadius * Math.sin(angle);
+                const y1 = centerY - startRadius * Math.cos(angle);
+                const x2 = centerX + endRadius * Math.sin(angle);
+                const y2 = centerY - endRadius * Math.cos(angle);
+
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+            }
+        }
+
+        function drawNumbers(colors) {
+            ctx.font = 'bold 24px Arial';
+            ctx.fillStyle = colors.dark;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            for (let i = 1; i <= 12; i++) {
+                const angle = (i * 30 * Math.PI) / 180;
+                const x = centerX + (radius - 50) * Math.sin(angle);
+                const y = centerY - (radius - 50) * Math.cos(angle);
+                ctx.fillText(i.toString(), x, y);
+            }
+        }
+
+        function drawTime(colors) {
+            const now = new Date();
+            const hours = now.getHours() % 12;
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+            const milliseconds = now.getMilliseconds();
+
+            // 秒単位の滑らかな動き
+            const totalSeconds = seconds + milliseconds / 1000;
+            const secondAngle = (totalSeconds * 6 * Math.PI) / 180;
+            const minuteAngle = ((minutes + totalSeconds / 60) * 6 * Math.PI) / 180;
+            const hourAngle = ((hours + minutes / 60) * 30 * Math.PI) / 180;
+
+            // 時針
+            drawHand(hourAngle, radius * 0.5, 8, colors.dark);
+
+            // 分針
+            drawHand(minuteAngle, radius * 0.7, 6, colors.main);
+
+            // 秒針
+            drawHand(secondAngle, radius * 0.8, 2, colors.light);
+
+            // デジタル表示も更新
+            const timeString = `${String(now.getHours()).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            document.getElementById('timeDisplay').textContent = timeString;
+            document.getElementById('timeDisplay').style.color = colors.textColor;
+        }
+
+        function drawHand(angle, length, width, color) {
+            ctx.strokeStyle = color;
+            ctx.lineWidth = width;
+            ctx.lineCap = 'round';
+
+            const x = centerX + length * Math.sin(angle);
+            const y = centerY - length * Math.cos(angle);
+
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+        }
+
+        function animate() {
+            // 背景をクリア
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawClock();
+            requestAnimationFrame(animate);
+        }
+
+        // タブボタンのイベントリスナー
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', (e) => {
+                document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+                currentColor = e.target.dataset.color;
+
+                // 黄色の時計の場合は背景色を変更
+                const body = document.body;
+                if (currentColor === 'yellow') {
+                    body.classList.add('yellow-bg');
+                } else {
+                    body.classList.remove('yellow-bg');
+                }
+            });
+        });
+
+        // 初期表示と定期更新
+        animate();
+    </script>
+</body>
+</html>
