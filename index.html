@@ -64,6 +64,11 @@
             color: #333;
         }
 
+        .tab-button.blue {
+            background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
+            color: white;
+        }
+
         .tab-button:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
@@ -100,6 +105,7 @@
         <button class="tab-button red" data-color="red">赤</button>
         <button class="tab-button orange" data-color="orange">オレンジ</button>
         <button class="tab-button yellow" data-color="yellow">黄色</button>
+        <button class="tab-button blue" data-color="blue">青</button>
     </div>
 
     <div class="clock-container">
@@ -149,6 +155,13 @@
                 light: '#ffea00',
                 veryLight: '#fff59d',
                 textColor: '#ffd600'
+            },
+            blue: {
+                main: '#1565c0',
+                dark: '#0d47a1',
+                light: '#42a5f5',
+                veryLight: '#bbdefb',
+                textColor: '#1565c0'
             }
         };
 
